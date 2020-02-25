@@ -95,6 +95,7 @@ def printMsg(msg,dbg):
 #the latter are only printed if Debug is set to true
 #########################################################################################################
 def printException(msg,exceptionInfo):
+#	Debug=True
 	global Debug
 	(type,emsg,etb) = exceptionInfo
 	printMsg('ERROR: %s (%s)' % (msg,emsg),False)
@@ -106,6 +107,7 @@ def printException(msg,exceptionInfo):
 			(fileName, lineNumber, functionName, codeLine) = line
 			print '  File "%s", line %i, in %s ' % (fileName, lineNumber, functionName)
 			print '    %s' % codeLine
+#	Debug=False
 #Ref0002 End
 
 
@@ -792,7 +794,7 @@ def getNameAndScope(configID):
 	return rtnVal  #Ref0015
 
 #########################################################################################################
-# Returns the node of a config ID
+# Returns the cell of a config ID
 #########################################################################################################
 def getConfigIDCell(configID):
 	printMsg('getConfigIDCell => '+ configID, True)

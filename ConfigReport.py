@@ -1,4 +1,5 @@
 ##########################################################################################
+##########################################################################################
 # 
 # Copyright International Business Machines Corp. 2014, 2020.
 # 
@@ -54,6 +55,7 @@
 # 2020/01/29  0049 DWR  Added Generic JAAS Alias 
 # 2020/01/29  0050 DWR  Removed duplicate resource property sub report and added some missing properties
 # 2020/02/17  0051 DWR  All properties are optional as they have been given default values, may now be run without any parameters
+# 2020/02/19  0052 DWR  Add JAAS auth Alias to JMS Connection Factory report
 
 import ConfigUtils as cu
 import sys
@@ -898,9 +900,48 @@ def ciphersReport(rptParms):
 	match=[]
 	for row in tableData:
 		match.append(cu.listElementsMatch(row))
-	ciphersDict = {'RowHeaders':allCiphers,'TableData':tableData,'Match':match,'Title':'Enabled Ciphers','FirstColumnHeader':'cipher'} #Ref0034
+	ciphersDict = {'RowHeaders':allCiphers,'TableData':tableData,'Match':match,'Title':'Enabled Ciphers','FirstColumnHeader':'Cipher'} #Ref0034
 	rptParms['Tables'].append(ciphersDict)
 #Ref0015 End
+
+#Begin Ref0052
+#########################################################################################################
+# J2C Authenticaiton Aliases associated with J2C connection factories
+#########################################################################################################
+def j2cAuthReport(rptParms):
+	configIDs = rptParms['ServerList']
+
+	authDataAliases = []
+	for configID in configIDs:
+		authDataAlias = 'NOT_FOUND'
+		mapping = cu.getConfigFromPath([configID] + rptParms['ConfigPath'])
+		mappingCell = cu.getConfigIDCell(configID)
+		if len(mapping['authDataAlias'].strip()) > 0 and not mapping['authDataAlias'] == '[]':
+			authAlliasIDs = cu.getConfigIDsByAttrValueFromDict('.*#JAASAuthData_.*',mapping['authDataAlias'],'alias',False,cu.MasterDict)
+			for authAlliasID in authAlliasIDs:
+				if mappingCell == cu.getConfigIDCell(authAlliasID):
+					authDataAlias = authAlliasID
+					break
+		authDataAliases.append(authDataAlias)
+	
+	attrs = cu.PropertiesDict['jaasAuthDataRsc:attributes'].split(',')
+	tableData = []
+	for attr in attrs:
+		row = []
+		for authDataAlias in authDataAliases:
+			if authDataAlias == 'NOT_FOUND':
+				row.append('not defined')
+			else:
+				row.append(cu.MasterDict[authDataAlias][attr])
+		tableData.append(row)
+		
+	match=[]
+	for row in tableData:
+		match.append(cu.listElementsMatch(row))
+	authDataDict = {'RowHeaders':attrs,'TableData':tableData,'Match':match,'Title':rptParms['Title'],'FirstColumnHeader':'Attribute'} 
+	rptParms['Tables'].append(authDataDict)
+
+#End Ref0052
 
 #########################################################################################################
 # Executes all server centric reports
@@ -1165,7 +1206,8 @@ def getResourceReportDefinitions():
 								   {'Title':'Session Pool','ReportName':'connectionPoolRsc','ConfigPath':['sessionPool']},\
 								   {'Title':'JMS Provider','ReportName':'jmsProviderRsc','ConfigPath':['provider']},\
 								   {'Title':'Connection Pool','ReportName':'connectionPoolRsc','ConfigPath':['connectionPool']},\
-								   {'Title':'JAAS Mapping','ReportName':'mappingModuleRsc','ConfigPath':['mapping']}\
+								   {'Title':'JAAS Mapping','ReportName':'mappingModuleRsc','ConfigPath':['mapping']},\
+								   {'Title':'J2C Authentication Alias','ReportName':'jaasAuthDataRsc','ConfigPath':['mapping'],'ReportFunc':j2cAuthReport},#Ref0052\
 								  ],\
 #End Ref0046
 #Begin Ref0047
